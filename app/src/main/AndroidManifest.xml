@@ -20,6 +20,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".roles.RoleSelectionActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".auth.LoginActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".registration.RegistrationActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".roles.stockist.StockistDashboardActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
