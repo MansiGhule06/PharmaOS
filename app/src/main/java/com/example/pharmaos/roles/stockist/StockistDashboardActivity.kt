@@ -1,6 +1,5 @@
 package com.example.pharmaos.roles.stockist
 
-
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -22,9 +21,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import com.example.pharmaos.roles.stockist.basket.BasketScreen
+import com.example.pharmaos.roles.stockist.basket.SupplierComparisonScreen
 
 // PharmaOS theme colors
-private val PharmaTeal = Color(0xFF008080)
+val PharmaTeal = Color(0xFF008080)
 private val PharmaPurple = Color(0xFF800080)
 private val PharmaBackground = Color(0xFFF1F5FF)
 private val PharmaText = Color(0xFF333333)
@@ -294,7 +295,30 @@ fun StockistDashboardScreen(
                         }
 
                         selectedBottomItem == "Home" -> {
-                            StockistHomeContent()
+                            StockistHomeContent(
+                                onCompareSuppliers = {
+                                    selectedBottomItem = "Compare Suppliers"
+                                    selectedDrawerItem = ""
+                                }
+                            )
+                        }
+
+                        selectedBottomItem == "Medicines" -> {
+                            MedicinesScreen()
+                        }
+
+                        selectedBottomItem == "Orders" -> {
+                            SimpleStockistPage(
+                                pageTitle = "Orders"
+                            )
+                        }
+
+                        selectedBottomItem == "Basket" -> {
+                            BasketScreen()
+                        }
+
+                        selectedBottomItem == "Compare Suppliers" -> {
+                            SupplierComparisonScreen()
                         }
 
                         else -> {
@@ -310,7 +334,9 @@ fun StockistDashboardScreen(
 }
 
 @Composable
-private fun StockistHomeContent() {
+private fun StockistHomeContent(
+    onCompareSuppliers: () -> Unit
+) {
 
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -421,9 +447,13 @@ private fun StockistHomeContent() {
             )
         }
 
-        // Unique feature
+        // Unique feature: open Supplier Comparison
         Card(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                    onCompareSuppliers()
+                },
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = PharmaTeal
