@@ -1,14 +1,13 @@
+
 package com.example.pharmaos.roles.stockist
 
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -21,8 +20,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+
 import com.example.pharmaos.roles.stockist.basket.BasketScreen
-import com.example.pharmaos.roles.stockist.basket.SupplierComparisonScreen
+import com.example.pharmaos.roles.stockist.basket.BasketManager
+
+import com.example.pharmaos.roles.stockist.orders.OrderRepository
+import com.example.pharmaos.roles.stockist.orders.OrderDetailsScreen
+import com.example.pharmaos.roles.stockist.orders.OrderTrackingScreen
+import com.example.pharmaos.roles.stockist.orders.OrdersScreen
+
 
 // PharmaOS theme colors
 val PharmaTeal = Color(0xFF008080)
@@ -33,6 +39,7 @@ private val PharmaGrey = Color(0xFF999999)
 private val PharmaGreen = Color(0xFF15803D)
 private val PharmaAmber = Color(0xFFB45309)
 
+
 class StockistDashboardActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,13 +49,16 @@ class StockistDashboardActivity : ComponentActivity() {
             MaterialTheme {
                 StockistDashboardScreen(
                     onLogout = {
+
                         val intent = Intent(
                             this,
                             com.example.pharmaos.roles.RoleSelectionActivity::class.java
                         )
+
                         intent.flags =
                             Intent.FLAG_ACTIVITY_NEW_TASK or
                                     Intent.FLAG_ACTIVITY_CLEAR_TASK
+
                         startActivity(intent)
                     }
                 )
@@ -57,12 +67,20 @@ class StockistDashboardActivity : ComponentActivity() {
     }
 }
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StockistDashboardScreen(
     onLogout: () -> Unit
 ) {
-    val bottomItems = listOf("Home", "Medicines", "Orders", "Basket")
+
+    val bottomItems = listOf(
+        "Home",
+        "Medicines",
+        "Orders",
+        "Basket"
+    )
+
     val drawerItems = listOf(
         "My Profile",
         "Business Information",
@@ -73,18 +91,53 @@ fun StockistDashboardScreen(
         "Help & Support"
     )
 
-    var selectedBottomItem by remember { mutableStateOf("Home") }
-    var selectedDrawerItem by remember { mutableStateOf("") }
+    var selectedBottomItem by remember {
+        mutableStateOf("Home")
+    }
 
-    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    var selectedDrawerItem by remember {
+        mutableStateOf("")
+    }
+
+    // Order navigation state
+    var selectedOrderId by remember {
+        mutableStateOf<String?>(null)
+    }
+
+    var showOrderTracking by remember {
+        mutableStateOf(false)
+    }
+
+    // Android back button handling
+    BackHandler(
+        enabled = selectedBottomItem == "Orders" &&
+                selectedOrderId != null
+    ) {
+
+        if (showOrderTracking) {
+            showOrderTracking = false
+        } else {
+            selectedOrderId = null
+        }
+    }
+
+    val drawerState = rememberDrawerState(
+        DrawerValue.Closed
+    )
+
     val scope = rememberCoroutineScope()
 
+
     ModalNavigationDrawer(
+
         drawerState = drawerState,
+
         drawerContent = {
+
             ModalDrawerSheet(
                 drawerContainerColor = Color.White
             ) {
+
                 // Drawer profile header
                 Column(
                     modifier = Modifier
@@ -92,12 +145,17 @@ fun StockistDashboardScreen(
                         .background(PharmaTeal)
                         .padding(20.dp)
                 ) {
+
                     Surface(
                         shape = RoundedCornerShape(50.dp),
                         color = Color.White,
                         modifier = Modifier.size(58.dp)
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
+
+                        Box(
+                            contentAlignment = Alignment.Center
+                        ) {
+
                             Icon(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = null,
@@ -107,7 +165,9 @@ fun StockistDashboardScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(
+                        modifier = Modifier.height(12.dp)
+                    )
 
                     Text(
                         text = "Stockist Name",
@@ -122,7 +182,9 @@ fun StockistDashboardScreen(
                         fontSize = 12.sp
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(
+                        modifier = Modifier.height(8.dp)
+                    )
 
                     Text(
                         text = "Stockist / Distributor",
@@ -131,83 +193,155 @@ fun StockistDashboardScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
 
+                Spacer(
+                    modifier = Modifier.height(12.dp)
+                )
+
+
+                // Drawer menu items
                 drawerItems.forEach { item ->
+
                     val itemIcon = when (item) {
-                        "My Profile" -> Icons.Default.Person
-                        "Business Information" -> Icons.Default.Business
-                        "Change Password" -> Icons.Default.Lock
-                        "Documents" -> Icons.Default.Description
-                        "Verification Status" -> Icons.Default.VerifiedUser
-                        "Notifications" -> Icons.Default.Notifications
-                        else -> Icons.Default.Help
+
+                        "My Profile" ->
+                            Icons.Default.Person
+
+                        "Business Information" ->
+                            Icons.Default.Business
+
+                        "Change Password" ->
+                            Icons.Default.Lock
+
+                        "Documents" ->
+                            Icons.Default.Description
+
+                        "Verification Status" ->
+                            Icons.Default.VerifiedUser
+
+                        "Notifications" ->
+                            Icons.Default.Notifications
+
+                        else ->
+                            Icons.Default.Help
                     }
 
+
                     NavigationDrawerItem(
-                        label = { Text(item) },
+
+                        label = {
+                            Text(item)
+                        },
+
                         selected = selectedDrawerItem == item,
+
                         onClick = {
+
                             selectedDrawerItem = item
+
                             scope.launch {
                                 drawerState.close()
                             }
                         },
+
                         icon = {
-                            Icon(itemIcon, contentDescription = null)
+
+                            Icon(
+                                itemIcon,
+                                contentDescription = null
+                            )
                         },
+
                         modifier = Modifier.padding(
                             horizontal = 12.dp,
                             vertical = 2.dp
                         ),
+
                         colors = NavigationDrawerItemDefaults.colors(
-                            selectedContainerColor = Color(0xFFE0F2F1),
-                            selectedIconColor = PharmaTeal,
-                            selectedTextColor = PharmaTeal
+
+                            selectedContainerColor =
+                                Color(0xFFE0F2F1),
+
+                            selectedIconColor =
+                                PharmaTeal,
+
+                            selectedTextColor =
+                                PharmaTeal
                         )
                     )
                 }
+
 
                 HorizontalDivider(
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
 
+
+                // Logout
                 NavigationDrawerItem(
-                    label = { Text("Logout") },
+
+                    label = {
+                        Text("Logout")
+                    },
+
                     selected = false,
+
                     onClick = onLogout,
+
                     icon = {
+
                         Icon(
                             Icons.Default.Logout,
                             contentDescription = null,
                             tint = Color(0xFFB91C1C)
                         )
                     },
-                    modifier = Modifier.padding(horizontal = 12.dp),
+
+                    modifier = Modifier.padding(
+                        horizontal = 12.dp
+                    ),
+
                     colors = NavigationDrawerItemDefaults.colors(
                         unselectedTextColor = Color(0xFFB91C1C)
                     )
                 )
             }
         }
+
     ) {
+
+
         Scaffold(
+
             containerColor = PharmaBackground,
+
+
+            // Top bar
             topBar = {
+
                 Row(
+
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(Color.White)
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(
+                            horizontal = 16.dp,
+                            vertical = 12.dp
+                        ),
+
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+
+
                     IconButton(
                         onClick = {
+
                             scope.launch {
                                 drawerState.open()
                             }
                         }
                     ) {
+
                         Icon(
                             Icons.Default.Menu,
                             contentDescription = "Open menu",
@@ -215,13 +349,18 @@ fun StockistDashboardScreen(
                         )
                     }
 
-                    Column(modifier = Modifier.weight(1f)) {
+
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+
                         Text(
                             text = "PharmaOS",
                             color = PharmaTeal,
                             fontSize = 21.sp,
                             fontWeight = FontWeight.Bold
                         )
+
                         Text(
                             text = "Stockist Dashboard",
                             color = PharmaGrey,
@@ -229,9 +368,14 @@ fun StockistDashboardScreen(
                         )
                     }
 
-                    IconButton(onClick = {
-                        selectedDrawerItem = "Notifications"
-                    }) {
+
+                    IconButton(
+                        onClick = {
+
+                            selectedDrawerItem = "Notifications"
+                        }
+                    ) {
+
                         Icon(
                             Icons.Default.Notifications,
                             contentDescription = "Notifications",
@@ -240,92 +384,275 @@ fun StockistDashboardScreen(
                     }
                 }
             },
+
+
+            // Bottom navigation
             bottomBar = {
+
                 NavigationBar(
                     containerColor = Color.White
                 ) {
+
                     bottomItems.forEach { item ->
+
                         val icon = when (item) {
-                            "Home" -> Icons.Default.Home
-                            "Medicines" -> Icons.Default.Search
-                            "Orders" -> Icons.Default.ShoppingBag
-                            else -> Icons.Default.ShoppingCart
+
+                            "Home" ->
+                                Icons.Default.Home
+
+                            "Medicines" ->
+                                Icons.Default.Search
+
+                            "Orders" ->
+                                Icons.Default.ShoppingBag
+
+                            else ->
+                                Icons.Default.ShoppingCart
                         }
 
+
                         NavigationBarItem(
+
                             selected = selectedBottomItem == item,
+
                             onClick = {
+
                                 selectedBottomItem = item
                                 selectedDrawerItem = ""
+
+                                // Reset order navigation
+                                // when leaving Orders tab
+                                if (item != "Orders") {
+
+                                    selectedOrderId = null
+                                    showOrderTracking = false
+                                }
                             },
+
                             icon = {
-                                Icon(icon, contentDescription = item)
+
+                                Icon(
+                                    icon,
+                                    contentDescription = item
+                                )
                             },
-                            label = { Text(item, fontSize = 10.sp) },
+
+                            label = {
+
+                                Text(
+                                    item,
+                                    fontSize = 10.sp
+                                )
+                            },
+
                             colors = NavigationBarItemDefaults.colors(
+
                                 selectedIconColor = PharmaTeal,
+
                                 selectedTextColor = PharmaTeal,
+
                                 indicatorColor = Color(0xFFE0F2F1)
                             )
                         )
                     }
                 }
             }
+
         ) { paddingValues ->
 
-            val pageTitle = if (selectedDrawerItem.isNotEmpty()) {
-                selectedDrawerItem
-            } else {
-                selectedBottomItem
-            }
 
-            LazyColumn(
+            val pageTitle =
+                if (selectedDrawerItem.isNotEmpty()) {
+                    selectedDrawerItem
+                } else {
+                    selectedBottomItem
+                }
+
+
+            Column(
+
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(paddingValues)
+
             ) {
-                item {
-                    when {
-                        selectedDrawerItem.isNotEmpty() -> {
-                            DrawerPageContent(
-                                pageTitle = selectedDrawerItem
-                            )
-                        }
 
-                        selectedBottomItem == "Home" -> {
-                            StockistHomeContent(
-                                onCompareSuppliers = {
-                                    selectedBottomItem = "Compare Suppliers"
-                                    selectedDrawerItem = ""
-                                }
-                            )
-                        }
 
-                        selectedBottomItem == "Medicines" -> {
-                            MedicinesScreen()
-                        }
+                when {
 
-                        selectedBottomItem == "Orders" -> {
-                            SimpleStockistPage(
-                                pageTitle = "Orders"
-                            )
-                        }
 
-                        selectedBottomItem == "Basket" -> {
-                            BasketScreen()
-                        }
+                    // Drawer screens
+                    selectedDrawerItem.isNotEmpty() -> {
 
-                        selectedBottomItem == "Compare Suppliers" -> {
-                            SupplierComparisonScreen()
-                        }
+                        DrawerPageContent(
+                            pageTitle = selectedDrawerItem
+                        )
+                    }
 
-                        else -> {
-                            SimpleStockistPage(
-                                pageTitle = pageTitle
-                            )
+
+                    // Home screen
+                    selectedBottomItem == "Home" -> {
+
+                        androidx.compose.foundation.lazy.LazyColumn(
+
+                            modifier = Modifier.fillMaxSize(),
+
+                            contentPadding = PaddingValues(16.dp),
+
+                            verticalArrangement =
+                                Arrangement.spacedBy(16.dp)
+
+                        ) {
+
+                            item {
+                                StockistHomeContent()
+                            }
                         }
+                    }
+
+
+                    // Medicines screen
+                    selectedBottomItem == "Medicines" -> {
+
+                        MedicinesScreen()
+                    }
+
+
+                    // Orders screen
+                    selectedBottomItem == "Orders" -> {
+
+                        val selectedOrder =
+                            selectedOrderId?.let { orderId ->
+
+                                OrderRepository.getOrderById(orderId)
+                            }
+
+
+                        when {
+
+
+                            // Display all orders
+                            selectedOrderId == null -> {
+
+                                OrdersScreen(
+
+                                    onOrderClick = { orderId ->
+
+                                        selectedOrderId = orderId
+                                        showOrderTracking = false
+                                    }
+                                )
+                            }
+
+
+                            // Display order tracking
+                            selectedOrder != null &&
+                                    showOrderTracking -> {
+
+                                OrderTrackingScreen(
+
+                                    order = selectedOrder,
+
+                                    onBack = {
+
+                                        showOrderTracking = false
+                                    }
+                                )
+                            }
+
+
+                            // Display selected order details
+                            selectedOrder != null -> {
+
+                                OrderDetailsScreen(
+
+                                    order = selectedOrder,
+
+                                    onBack = {
+
+                                        selectedOrderId = null
+                                    },
+
+                                    onTrackOrder = {
+
+                                        showOrderTracking = true
+                                    },
+
+                                    onReorder = { order ->
+
+                                        order.items.forEach { item ->
+
+                                            BasketManager.addMedicine(
+
+                                                medicineName =
+                                                    item.medicineName,
+
+                                                brand =
+                                                    item.brand,
+
+                                                salt = "",
+
+                                                strength = "",
+
+                                                unitPrice =
+                                                    item.unitPrice,
+
+                                                quantity =
+                                                    item.quantity,
+
+                                                supplierName =
+                                                    order.supplierName
+                                            )
+                                        }
+
+
+                                        // Navigate to Basket
+                                        selectedOrderId = null
+
+                                        showOrderTracking = false
+
+                                        selectedBottomItem = "Basket"
+                                    }
+                                )
+                            }
+
+
+                            else -> {
+
+                                Text(
+                                    text = "Order not found",
+                                    modifier = Modifier.padding(16.dp),
+                                    color = PharmaText
+                                )
+                            }
+                        }
+                    }
+
+
+                    // Basket screen
+                    selectedBottomItem == "Basket" -> {
+
+                        BasketScreen(
+
+                            onOrderPlaced = { _ ->
+
+                                // Reset order navigation
+                                selectedOrderId = null
+                                showOrderTracking = false
+
+                                // Automatically navigate to Orders
+                                selectedDrawerItem = ""
+                                selectedBottomItem = "Orders"
+                            }
+                        )
+                    }
+
+
+                    else -> {
+
+                        SimpleStockistPage(
+                            pageTitle = pageTitle
+                        )
                     }
                 }
             }
@@ -333,22 +660,29 @@ fun StockistDashboardScreen(
     }
 }
 
+
+// ----------------------------------------------------
+// HOME SCREEN CONTENT
+// ----------------------------------------------------
+
 @Composable
-private fun StockistHomeContent(
-    onCompareSuppliers: () -> Unit
-) {
+private fun StockistHomeContent() {
 
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+
+
         // Welcome section
         Column {
+
             Text(
                 text = "Welcome back!",
                 fontSize = 23.sp,
                 fontWeight = FontWeight.Bold,
                 color = PharmaText
             )
+
             Text(
                 text = "Here's your business overview.",
                 color = PharmaGrey,
@@ -356,30 +690,46 @@ private fun StockistHomeContent(
             )
         }
 
+
         // Verification status
         Card(
+
             modifier = Modifier.fillMaxWidth(),
+
             shape = RoundedCornerShape(14.dp),
+
             colors = CardDefaults.cardColors(
                 containerColor = Color(0xFFFFF7E6)
             )
+
         ) {
+
             Row(
+
                 modifier = Modifier.padding(14.dp),
+
                 verticalAlignment = Alignment.CenterVertically
+
             ) {
+
                 Icon(
                     Icons.Default.Schedule,
                     contentDescription = null,
                     tint = PharmaAmber
                 )
-                Spacer(modifier = Modifier.width(10.dp))
+
+                Spacer(
+                    modifier = Modifier.width(10.dp)
+                )
+
                 Column {
+
                     Text(
                         "Verification Pending",
                         color = PharmaAmber,
                         fontWeight = FontWeight.Bold
                     )
+
                     Text(
                         "Your business documents are awaiting review.",
                         color = PharmaText,
@@ -389,6 +739,7 @@ private fun StockistHomeContent(
             }
         }
 
+
         Text(
             text = "Business Overview",
             fontSize = 17.sp,
@@ -396,13 +747,18 @@ private fun StockistHomeContent(
             color = PharmaText
         )
 
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+
             DashboardStatCard(
                 title = "Total Orders",
                 value = "24",
                 icon = Icons.Default.ShoppingBag,
                 modifier = Modifier.weight(1f)
             )
+
             DashboardStatCard(
                 title = "Pending",
                 value = "05",
@@ -411,13 +767,18 @@ private fun StockistHomeContent(
             )
         }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+
             DashboardStatCard(
                 title = "Medicines",
                 value = "128",
                 icon = Icons.Default.Medication,
                 modifier = Modifier.weight(1f)
             )
+
             DashboardStatCard(
                 title = "Suppliers",
                 value = "12",
@@ -425,6 +786,7 @@ private fun StockistHomeContent(
                 modifier = Modifier.weight(1f)
             )
         }
+
 
         // Quick actions
         Text(
@@ -434,12 +796,17 @@ private fun StockistHomeContent(
             color = PharmaText
         )
 
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+
             QuickActionCard(
                 title = "Find Medicines",
                 icon = Icons.Default.Search,
                 modifier = Modifier.weight(1f)
             )
+
             QuickActionCard(
                 title = "My Basket",
                 icon = Icons.Default.ShoppingCart,
@@ -447,47 +814,8 @@ private fun StockistHomeContent(
             )
         }
 
-        // Unique feature: open Supplier Comparison
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable {
-                    onCompareSuppliers()
-                },
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = PharmaTeal
-            )
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Best-Buy Basket Optimizer",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(5.dp))
-                    Text(
-                        text = "Compare supplier offers and find a cost-effective basket.",
-                        color = Color.White.copy(alpha = 0.9f),
-                        fontSize = 12.sp
-                    )
-                }
-                Icon(
-                    Icons.Default.ArrowForward,
-                    contentDescription = null,
-                    tint = Color.White
-                )
-            }
-        }
 
-        // Alerts
+        // Inventory alerts
         Text(
             text = "Inventory Alerts",
             fontSize = 17.sp,
@@ -495,19 +823,15 @@ private fun StockistHomeContent(
             color = PharmaText
         )
 
-        AlertCard(
-            title = "Low Stock Alert",
-            description = "3 medicines are running low on stock.",
-            icon = Icons.Default.Warning,
-            iconColor = PharmaAmber
-        )
 
+        // Expiry Reminder
         AlertCard(
             title = "Expiry Reminder",
             description = "2 medicine batches are nearing expiry.",
             icon = Icons.Default.Event,
             iconColor = Color(0xFFB91C1C)
         )
+
 
         // Recent orders
         Text(
@@ -517,12 +841,14 @@ private fun StockistHomeContent(
             color = PharmaText
         )
 
+
         RecentOrderCard(
             orderId = "#PH-1001",
             supplier = "ABC Pharmaceuticals",
             amount = "₹12,500",
             status = "Delivered"
         )
+
 
         RecentOrderCard(
             orderId = "#PH-1002",
@@ -533,36 +859,58 @@ private fun StockistHomeContent(
     }
 }
 
+
+// ----------------------------------------------------
+// DASHBOARD STAT CARD
+// ----------------------------------------------------
+
 @Composable
 private fun DashboardStatCard(
+
     title: String,
+
     value: String,
+
     icon: androidx.compose.ui.graphics.vector.ImageVector,
+
     modifier: Modifier = Modifier
+
 ) {
+
     Card(
+
         modifier = modifier,
+
         shape = RoundedCornerShape(14.dp),
+
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         )
+
     ) {
+
         Column(
             modifier = Modifier.padding(14.dp)
         ) {
+
             Icon(
                 icon,
                 contentDescription = null,
                 tint = PharmaTeal,
                 modifier = Modifier.size(25.dp)
             )
-            Spacer(modifier = Modifier.height(10.dp))
+
+            Spacer(
+                modifier = Modifier.height(10.dp)
+            )
+
             Text(
                 value,
                 fontSize = 23.sp,
                 fontWeight = FontWeight.Bold,
                 color = PharmaText
             )
+
             Text(
                 title,
                 fontSize = 11.sp,
@@ -572,32 +920,55 @@ private fun DashboardStatCard(
     }
 }
 
+
+// ----------------------------------------------------
+// QUICK ACTION CARD
+// ----------------------------------------------------
+
 @Composable
 private fun QuickActionCard(
+
     title: String,
+
     icon: androidx.compose.ui.graphics.vector.ImageVector,
+
     modifier: Modifier = Modifier
+
 ) {
+
     Card(
+
         modifier = modifier,
+
         shape = RoundedCornerShape(14.dp),
+
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         )
+
     ) {
+
         Column(
+
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(15.dp),
+
             horizontalAlignment = Alignment.CenterHorizontally
+
         ) {
+
             Icon(
                 icon,
                 contentDescription = null,
                 tint = PharmaPurple,
                 modifier = Modifier.size(28.dp)
             )
-            Spacer(modifier = Modifier.height(8.dp))
+
+            Spacer(
+                modifier = Modifier.height(8.dp)
+            )
+
             Text(
                 title,
                 color = PharmaText,
@@ -608,38 +979,64 @@ private fun QuickActionCard(
     }
 }
 
+
+// ----------------------------------------------------
+// ALERT CARD
+// ----------------------------------------------------
+
 @Composable
 private fun AlertCard(
+
     title: String,
+
     description: String,
+
     icon: androidx.compose.ui.graphics.vector.ImageVector,
+
     iconColor: Color
+
 ) {
+
     Card(
+
         modifier = Modifier.fillMaxWidth(),
+
         shape = RoundedCornerShape(12.dp),
+
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         )
+
     ) {
+
         Row(
+
             modifier = Modifier.padding(14.dp),
+
             verticalAlignment = Alignment.CenterVertically
+
         ) {
+
             Icon(
                 icon,
                 contentDescription = null,
                 tint = iconColor,
                 modifier = Modifier.size(26.dp)
             )
-            Spacer(modifier = Modifier.width(12.dp))
+
+            Spacer(
+                modifier = Modifier.width(12.dp)
+            )
+
             Column {
+
                 Text(
                     title,
                     fontWeight = FontWeight.Bold,
                     color = PharmaText,
                     fontSize = 13.sp
                 )
+
                 Text(
                     description,
                     color = PharmaGrey,
@@ -650,37 +1047,62 @@ private fun AlertCard(
     }
 }
 
+
+// ----------------------------------------------------
+// RECENT ORDER CARD
+// ----------------------------------------------------
+
 @Composable
 private fun RecentOrderCard(
+
     orderId: String,
+
     supplier: String,
+
     amount: String,
+
     status: String
+
 ) {
+
     Card(
+
         modifier = Modifier.fillMaxWidth(),
+
         shape = RoundedCornerShape(12.dp),
+
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         )
+
     ) {
+
         Row(
+
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(14.dp),
+
             verticalAlignment = Alignment.CenterVertically
+
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+
                 Text(
                     orderId,
                     fontWeight = FontWeight.Bold,
                     color = PharmaText
                 )
+
                 Text(
                     supplier,
                     color = PharmaGrey,
                     fontSize = 12.sp
                 )
+
                 Text(
                     amount,
                     color = PharmaTeal,
@@ -689,30 +1111,48 @@ private fun RecentOrderCard(
                 )
             }
 
+
             Text(
+
                 status,
+
                 color = if (status == "Delivered") {
                     PharmaGreen
                 } else {
                     PharmaAmber
                 },
+
                 fontWeight = FontWeight.SemiBold,
+
                 fontSize = 11.sp
             )
         }
     }
 }
 
+
+// ----------------------------------------------------
+// DRAWER PAGE CONTENT
+// ----------------------------------------------------
+
 @Composable
 private fun DrawerPageContent(
     pageTitle: String
 ) {
+
     Column(
+
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(
+                horizontal = 16.dp,
+                vertical = 8.dp
+            ),
+
         verticalArrangement = Arrangement.spacedBy(12.dp)
+
     ) {
+
         Text(
             text = pageTitle,
             fontSize = 23.sp,
@@ -720,45 +1160,73 @@ private fun DrawerPageContent(
             color = PharmaText
         )
 
+
         Text(
+
             text = when (pageTitle) {
+
                 "My Profile" ->
                     "View and update your personal information."
+
                 "Business Information" ->
                     "Manage your business name, address and GST details."
+
                 "Change Password" ->
                     "Update your account password securely."
+
                 "Documents" ->
                     "Upload or replace your business licence documents."
+
                 "Verification Status" ->
                     "Check your business verification progress."
+
                 "Notifications" ->
                     "Your important updates will appear here."
+
                 else ->
                     "Contact PharmaOS support for assistance."
             },
+
             color = PharmaGrey,
+
             fontSize = 13.sp
         )
 
+
         if (pageTitle == "Verification Status") {
+
             AlertCard(
+
                 title = "Verification Pending",
-                description = "Your documents are waiting for administrator review.",
+
+                description =
+                    "Your documents are waiting for administrator review.",
+
                 icon = Icons.Default.Schedule,
+
                 iconColor = PharmaAmber
             )
+
         } else {
+
             Card(
+
                 modifier = Modifier.fillMaxWidth(),
+
                 colors = CardDefaults.cardColors(
                     containerColor = Color.White
                 )
+
             ) {
+
                 Text(
+
                     text = "This section will be implemented next.",
+
                     modifier = Modifier.padding(18.dp),
+
                     color = PharmaText,
+
                     fontSize = 13.sp
                 )
             }
@@ -766,14 +1234,26 @@ private fun DrawerPageContent(
     }
 }
 
+
+// ----------------------------------------------------
+// SIMPLE STOCKIST PAGE
+// ----------------------------------------------------
+
 @Composable
 private fun SimpleStockistPage(
     pageTitle: String
 ) {
+
     Column(
-        modifier = Modifier.fillMaxWidth(),
+
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+
         verticalArrangement = Arrangement.spacedBy(12.dp)
+
     ) {
+
         Text(
             text = pageTitle,
             fontSize = 23.sp,
@@ -781,27 +1261,47 @@ private fun SimpleStockistPage(
             color = PharmaText
         )
 
+
         Card(
+
             modifier = Modifier.fillMaxWidth(),
+
             colors = CardDefaults.cardColors(
                 containerColor = Color.White
             )
+
         ) {
+
             Column(
                 modifier = Modifier.padding(20.dp)
             ) {
+
                 Icon(
+
                     imageVector = when (pageTitle) {
-                        "Medicines" -> Icons.Default.Medication
-                        "Orders" -> Icons.Default.ShoppingBag
-                        else -> Icons.Default.ShoppingCart
+
+                        "Medicines" ->
+                            Icons.Default.Medication
+
+                        "Orders" ->
+                            Icons.Default.ShoppingBag
+
+                        else ->
+                            Icons.Default.ShoppingCart
                     },
+
                     contentDescription = null,
+
                     tint = PharmaTeal,
+
                     modifier = Modifier.size(35.dp)
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+
+                Spacer(
+                    modifier = Modifier.height(12.dp)
+                )
+
 
                 Text(
                     text = "$pageTitle screen",
@@ -809,6 +1309,7 @@ private fun SimpleStockistPage(
                     color = PharmaText,
                     fontSize = 17.sp
                 )
+
 
                 Text(
                     text = "We'll build this section in the next development step.",

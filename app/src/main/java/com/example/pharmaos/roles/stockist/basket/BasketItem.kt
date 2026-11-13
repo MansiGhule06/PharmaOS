@@ -7,7 +7,8 @@ data class BasketItem(
     val salt: String,
     val strength: String,
     val unitPrice: Double,
-    val quantity: Int = 1
+    val quantity: Int = 1,
+    val supplierName: String = ""
 ) {
     val totalPrice: Double
         get() = unitPrice * quantity
