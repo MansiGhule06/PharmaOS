@@ -1,3 +1,4 @@
+
 package com.example.pharmaos.roles
 
 import android.content.Intent
@@ -6,16 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -45,10 +37,12 @@ class RoleSelectionActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 RoleSelectionScreen { selectedRole ->
+
                     val intent = Intent(
-                        this,
+                        this@RoleSelectionActivity,
                         LoginActivity::class.java
                     )
+
                     intent.putExtra("USER_ROLE", selectedRole)
                     startActivity(intent)
                 }
@@ -68,6 +62,7 @@ fun RoleSelectionScreen(
             .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
         Spacer(Modifier.height(36.dp))
 
         Text(
@@ -93,12 +88,19 @@ fun RoleSelectionScreen(
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             RoleCard(
-                "Manufacturer", "🏭", Teal,
-                Modifier.weight(1f), onRoleSelected
+                title = "Manufacturer",
+                emoji = "🏭",
+                accent = Teal,
+                modifier = Modifier.weight(1f),
+                onClick = onRoleSelected
             )
+
             RoleCard(
-                "Pharmaceutical Company / Brand", "💊", Purple,
-                Modifier.weight(1f), onRoleSelected
+                title = "Pharmaceutical Company / Brand",
+                emoji = "💊",
+                accent = Purple,
+                modifier = Modifier.weight(1f),
+                onClick = onRoleSelected
             )
         }
 
@@ -109,12 +111,19 @@ fun RoleSelectionScreen(
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             RoleCard(
-                "Stockist / Distributor", "🚚", Purple,
-                Modifier.weight(1f), onRoleSelected
+                title = "Stockist / Distributor",
+                emoji = "🚚",
+                accent = Purple,
+                modifier = Modifier.weight(1f),
+                onClick = onRoleSelected
             )
+
             RoleCard(
-                "Administrator", "🛡️", Teal,
-                Modifier.weight(1f), onRoleSelected
+                title = "Administrator",
+                emoji = "🛡️",
+                accent = Teal,
+                modifier = Modifier.weight(1f),
+                onClick = onRoleSelected
             )
         }
 
@@ -140,7 +149,9 @@ private fun RoleCard(
     Card(
         modifier = modifier
             .height(190.dp)
-            .clickable { onClick(title) },
+            .clickable {
+                onClick(title)
+            },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.White
@@ -154,6 +165,7 @@ private fun RoleCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+
             Box(
                 modifier = Modifier
                     .size(68.dp)
@@ -163,7 +175,10 @@ private fun RoleCard(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = emoji, fontSize = 34.sp)
+                Text(
+                    text = emoji,
+                    fontSize = 34.sp
+                )
             }
 
             Spacer(Modifier.height(14.dp))

@@ -36,6 +36,58 @@
         <activity
             android:name=".roles.stockist.StockistDashboardActivity"
             android:exported="false" />
+        <activity
+            android:name=".roles.manufacturer.ManufacturerDashboardActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".roles.manufacturer.ManufacturerProductsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".roles.manufacturer.ManufacturerOrdersActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".roles.manufacturer.ManufacturerBatchActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".roles.pharma.PharmaDashboardActivity"
+            android:exported="false" />
+        <activity
+            android:name=".roles.pharma.PharmaMedicineActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".roles.pharma.PharmaOrdersActivity"
+            android:exported="false" />
+        <activity
+            android:name=".roles.pharma.PharmaBatchActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".roles.pharma.PharmaInfoActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".roles.admin.AdminDashboardActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".roles.admin.AdminUserManagementActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".roles.admin.AdminVerificationActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".roles.admin.AdminInfoActivity"
+            android:exported="false" />
+        <activity
+            android:name=".roles.admin.AdminMedicineCatalogueActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

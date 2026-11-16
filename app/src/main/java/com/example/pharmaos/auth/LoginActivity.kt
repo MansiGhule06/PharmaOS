@@ -1,7 +1,9 @@
+
 package com.example.pharmaos.auth
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -9,8 +11,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -24,7 +26,12 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
 import com.example.pharmaos.registration.RegistrationActivity
+import com.example.pharmaos.roles.manufacturer.ManufacturerDashboardActivity
+import com.example.pharmaos.roles.stockist.StockistDashboardActivity
+import com.example.pharmaos.roles.pharma.PharmaDashboardActivity
+import com.example.pharmaos.roles.admin.AdminDashboardActivity
 
 private val PrimaryTeal = Color(0xFF008080)
 private val PrimaryPurple = Color(0xFF800080)
@@ -32,7 +39,6 @@ private val AppBackground = Color(0xFFF1F5FF)
 private val PrimaryText = Color(0xFF333333)
 private val SecondaryText = Color(0xFF999999)
 
-// Login Activity
 class LoginActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,22 +51,68 @@ class LoginActivity : ComponentActivity() {
             MaterialTheme {
                 LoginScreen(
                     selectedRole = selectedRole,
+
                     onRegisterClick = {
-                        val intent = Intent(this, RegistrationActivity::class.java)
+                        val intent = Intent(
+                            this@LoginActivity,
+                            RegistrationActivity::class.java
+                        )
+
                         intent.putExtra("USER_ROLE", selectedRole)
                         startActivity(intent)
                     },
+
                     onLoginClick = { email, password ->
 
-                        if (selectedRole == "Stockist / Distributor") {
-                            val intent = Intent(
-                                this,
-                                com.example.pharmaos.roles.stockist.StockistDashboardActivity::class.java
-                            )
-                            startActivity(intent)
-                            finish()
+                        // Basic validation
+                        if (email.isBlank() || password.isBlank()) {
+                            Toast.makeText(
+                                this@LoginActivity,
+                                "Please enter email and password",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                            return@LoginScreen
                         }
 
+                        // Navigate according to selected role
+                        val dashboardIntent = when (selectedRole) {
+
+                            "Manufacturer" -> {
+                                Intent(
+                                    this@LoginActivity,
+                                    ManufacturerDashboardActivity::class.java
+                                )
+                            }
+
+                            "Stockist / Distributor" -> {
+                                Intent(
+                                    this@LoginActivity,
+                                    StockistDashboardActivity::class.java
+                                )
+                            }
+
+                            "Pharmaceutical Company / Brand" -> {
+                                Intent(
+                                    this@LoginActivity,
+                                    PharmaDashboardActivity::class.java
+                                )
+                            }
+
+                            "Administrator" -> {
+                                Intent(
+                                    this@LoginActivity,
+                                    AdminDashboardActivity::class.java
+                                )
+                            }
+
+                            else -> null
+                        }
+
+                        if (dashboardIntent != null) {
+                            startActivity(dashboardIntent)
+                            finish()
+                        }
                     }
                 )
             }
@@ -88,7 +140,6 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center
     ) {
 
-        // App name
         Text(
             text = "PharmaOS",
             fontSize = 32.sp,
@@ -106,7 +157,6 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Login card
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
@@ -139,7 +189,6 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Selected role
                 Surface(
                     color = PrimaryTeal.copy(alpha = 0.10f),
                     shape = RoundedCornerShape(10.dp)
@@ -158,7 +207,6 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(22.dp))
 
-                // Email field
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
@@ -179,7 +227,6 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Password field
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
@@ -219,11 +266,8 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Forgot password
                 TextButton(
-                    onClick = {
-                        // Forgot password screen will be implemented later.
-                    },
+                    onClick = {},
                     modifier = Modifier.align(Alignment.End)
                 ) {
                     Text(
@@ -235,7 +279,6 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Login button
                 Button(
                     onClick = {
                         onLoginClick(email, password)
@@ -257,19 +300,21 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Registration navigation
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+
                     Text(
                         text = "Don't have an account?",
                         color = SecondaryText,
                         fontSize = 13.sp
                     )
 
-                    TextButton(onClick = onRegisterClick) {
+                    TextButton(
+                        onClick = onRegisterClick
+                    ) {
                         Text(
                             text = "Register",
                             color = PrimaryPurple,
